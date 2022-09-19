@@ -34,19 +34,18 @@ class MainActivity : ComponentActivity() {
         setContent {
             ComposeCoachmarkTheme {
 
-                var item1 by remember {
-                    mutableStateOf(CoachMarkState())
-                }
-                var item2 by remember {
-                    mutableStateOf(CoachMarkState())
-                }
+
+                val (item1, setItem1) = remember { mutableStateOf(CoachMarkState()) }
+                val (item2, setItem2) = remember { mutableStateOf(CoachMarkState()) }
+
+                var isCoachMarkVisible by remember { mutableStateOf(true) }
 
                 val description =
                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla ullamcorper et nisi vel dapibus."
 
                 CoachMarkProvider(
-                    isVisible = true,
-                    onDismiss = {},
+                    isVisible = isCoachMarkVisible,
+                    onDismiss = { isCoachMarkVisible = false },
                     coachMarkState = mutableListOf(item1,item2)
                 ) {
                     Surface(
@@ -54,17 +53,17 @@ class MainActivity : ComponentActivity() {
                         color = MaterialTheme.colors.background
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Greeting("Android", setCoachmarkCallback = { offset, size ->
-                                item1 = item1.copy(
-                                    offset,size,description,4.dp,CoachmarkAlignment.TOP
-                                )
-                            })
                             Button(onClick = {}, modifier = Modifier
                                 .align(Alignment.TopCenter)
-                                .coachMark { offset, size ->
-                                    item2 = item2.copy(
-                                        offset, size, description, 4.dp, CoachmarkAlignment.TOP
-                                    )
+                                .coachMark { state ->
+                                    setItem1(state.copy(description = description))
+                                }) {
+                                Text(text = "Hello mthrfckr")
+                            }
+                            Button(onClick = {}, modifier = Modifier
+                                .align(Alignment.Center)
+                                .coachMark { state ->
+                                    setItem2(state.copy(description = description, coachmarkAlignment = CoachmarkAlignment.TOP))
                                 }) {
                                 Text(text = "Hello mthrfckr")
                             }
@@ -73,15 +72,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, setCoachmarkCallback: (offset: Offset, size: IntSize) -> Unit) {
-    Button(onClick = { /*TODO*/ }, modifier = Modifier.coachMark(setCoachmarkCallback)) {
-        Text(
-            text = "Hello $name!"
-        )
     }
 }
 

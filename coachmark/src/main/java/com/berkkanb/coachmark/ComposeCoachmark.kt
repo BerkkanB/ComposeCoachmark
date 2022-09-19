@@ -41,11 +41,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 
 
-fun Modifier.coachMark(setCoachmarkCallback: (Offset, IntSize) -> Unit): Modifier {
+fun Modifier.coachMark(setItem: (CoachMarkState) -> Unit): Modifier {
     return this.onGloballyPositioned {
         val position = it.positionInRoot()
         val size = it.size
-        setCoachmarkCallback.invoke(position, size)
+        setItem(CoachMarkState(position,size))
     }
 }
 
@@ -57,14 +57,11 @@ fun CoachMarkProvider(
     content: @Composable () -> Unit
 ) {
 
-    var visibility by remember {
-        mutableStateOf(isVisible)
-    }
 
     Surface() {
         Box() {
             content()
-            if (visibility && coachMarkState.isEmpty().not()) {
+            if (isVisible && coachMarkState.isEmpty().not()) {
                 var index by remember {
                     mutableStateOf(0)
                 }
@@ -89,18 +86,18 @@ fun CoachMarkProvider(
                         Canvas(modifier = Modifier
                             .fillMaxSize()
                             .clickable {
-                                if (index < coachMarkState.size -1){
+                                if (index < coachMarkState.size.minus(1)){
                                     index = index.plus(1)
                                 }
                                 else {
-                                    visibility = false
+                                    onDismiss.invoke()
                                 }
                             }
                             .graphicsLayer {
                                 alpha = 0.99f
                             }) {
                             drawRect(
-                                color = Color.Black.copy(0.5f)
+                                color = Color.Black.copy(0.7f)
                             )
                             drawRoundRect(
                                 color = Color.Transparent,
@@ -135,7 +132,6 @@ fun CoachMarkProvider(
                                 .align(Alignment.TopEnd)
                                 .padding(top = 20.dp, end = 30.dp)
                                 .clickable {
-                                    visibility = false
                                     onDismiss.invoke()
                                 },
                             verticalAlignment = Alignment.CenterVertically
