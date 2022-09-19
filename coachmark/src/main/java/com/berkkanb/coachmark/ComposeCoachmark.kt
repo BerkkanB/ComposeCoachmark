@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -39,8 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 
-fun Modifier.coachMark(setCoachmarkCallback: (Offset, IntSize) -> Unit): Modifier {
 
+fun Modifier.coachMark(setCoachmarkCallback: (Offset, IntSize) -> Unit): Modifier {
     return this.onGloballyPositioned {
         val position = it.positionInRoot()
         val size = it.size
@@ -50,7 +51,7 @@ fun Modifier.coachMark(setCoachmarkCallback: (Offset, IntSize) -> Unit): Modifie
 
 @Composable
 fun CoachMarkProvider(
-    coachMarkState: CoachMarkState,
+    coachMarkState: MutableList<CoachMarkState>,
     isVisible: Boolean = false,
     onDismiss: () -> Unit,
     content: @Composable () -> Unit
@@ -60,91 +61,100 @@ fun CoachMarkProvider(
         mutableStateOf(isVisible)
     }
 
-    Box() {
-        content()
-        if (visibility) {
-            with(coachMarkState) {
-                if (coachmarkPosition != Offset.Unspecified) {
+    Surface() {
+        Box() {
+            content()
+            if (visibility && coachMarkState.isEmpty().not()) {
+                var index by remember {
+                    mutableStateOf(0)
+                }
+                with(coachMarkState[index]) {
+                    if (coachmarkPosition != Offset.Unspecified) {
 
-                    var descriptionWidth by remember {
-                        mutableStateOf(0)
-                    }
-                    var descriptionHeight by remember {
-                        mutableStateOf(0)
-                    }
-                    val iconWidth = 64.dp
-                    val iconMid = (coachmarkSize.width - iconWidth.toPx()) / 2
-                    val iconPositionX = (coachmarkPosition.x + iconMid).toDp()
-                    var iconPositionY = (coachmarkPosition.y + coachmarkSize.height + 50f).toDp()
-                    var textPositionY = (coachmarkPosition.y + coachmarkSize.height + 250f).toDp()
+                        var descriptionHeight by remember {
+                            mutableStateOf(0)
+                        }
+                        val iconWidth = 64.dp
+                        val iconMid = (coachmarkSize.width - iconWidth.toPx()) / 2
+                        val iconPositionX = (coachmarkPosition.x + iconMid).toDp()
+                        var iconPositionY = (coachmarkPosition.y + coachmarkSize.height + 50f).toDp()
+                        var textPositionY = (coachmarkPosition.y + coachmarkSize.height + 250f).toDp()
 
-                    if (coachmarkAlignment == CoachmarkAlignment.TOP) {
-                        iconPositionY = (coachmarkPosition.y - iconWidth.toPx() - 50f).toDp()
-                        textPositionY =
-                            (coachmarkPosition.y - iconWidth.toPx() - descriptionHeight - 100f).toDp()
-                    }
+                        if (coachmarkAlignment == CoachmarkAlignment.TOP) {
+                            iconPositionY = (coachmarkPosition.y - iconWidth.toPx() - 50f).toDp()
+                            textPositionY =
+                                (coachmarkPosition.y - iconWidth.toPx() - descriptionHeight - 100f).toDp()
+                        }
 
-                    Canvas(modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer {
-                            alpha = 0.99f
-                        }) {
-                        drawRect(
-                            color = Color.Black.copy(0.5f)
-                        )
-                        drawRoundRect(
-                            color = Color.Transparent,
-                            topLeft = coachmarkPosition,
-                            size = coachmarkSize.toSize(),
-                            blendMode = BlendMode.Clear,
-                            cornerRadius = CornerRadius(cornerRadius.toPx(), cornerRadius.toPx())
-                        )
-                    }
-                    Image(
-                        modifier = Modifier
-                            .absoluteOffset(iconPositionX, iconPositionY)
-                            .size(iconWidth)
-                            .rotate(if (coachmarkAlignment == CoachmarkAlignment.BOTTOM) 180f else 0f),
-                        painter = painterResource(id = R.drawable.ic_forward),
-                        contentDescription = ""
-                    )
-                    Text(
-                        text = description,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .absoluteOffset(0.dp, textPositionY)
-                            .onGloballyPositioned {
-                                descriptionWidth = it.size.width
-                                descriptionHeight = it.size.height
-                            },
-                        fontSize = 18.sp,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 20.dp, end = 30.dp)
+                        Canvas(modifier = Modifier
+                            .fillMaxSize()
                             .clickable {
-                                visibility = false
-                                onDismiss.invoke()
-                            },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Filled.Close,
-                            tint = Color.White,
+                                if (index < coachMarkState.size -1){
+                                    index = index.plus(1)
+                                }
+                                else {
+                                    visibility = false
+                                }
+                            }
+                            .graphicsLayer {
+                                alpha = 0.99f
+                            }) {
+                            drawRect(
+                                color = Color.Black.copy(0.5f)
+                            )
+                            drawRoundRect(
+                                color = Color.Transparent,
+                                topLeft = coachmarkPosition,
+                                size = coachmarkSize.toSize(),
+                                blendMode = BlendMode.Clear,
+                                cornerRadius = CornerRadius(cornerRadius.toPx(), cornerRadius.toPx())
+                            )
+                        }
+                        Image(
                             modifier = Modifier
-                                .padding(end = 5.dp)
-                                .size(18.dp),
+                                .absoluteOffset(iconPositionX, iconPositionY)
+                                .size(iconWidth)
+                                .rotate(if (coachmarkAlignment == CoachmarkAlignment.BOTTOM) 180f else 0f),
+                            painter = painterResource(id = R.drawable.ic_forward),
                             contentDescription = ""
                         )
                         Text(
-                            text = "CLOSE",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            text = description,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .absoluteOffset(0.dp, textPositionY)
+                                .onGloballyPositioned {
+                                    descriptionHeight = it.size.height
+                                },
+                            fontSize = 18.sp,
+                            color = Color.White,
+                            textAlign = TextAlign.Center
                         )
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 20.dp, end = 30.dp)
+                                .clickable {
+                                    visibility = false
+                                    onDismiss.invoke()
+                                },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Filled.Close,
+                                tint = Color.White,
+                                modifier = Modifier
+                                    .padding(end = 5.dp)
+                                    .size(18.dp),
+                                contentDescription = ""
+                            )
+                            Text(
+                                text = "CLOSE",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
@@ -153,11 +163,11 @@ fun CoachMarkProvider(
 }
 
 data class CoachMarkState(
-    val coachmarkPosition: Offset,
-    val coachmarkSize: IntSize,
-    val description: String,
-    val cornerRadius: Dp,
-    val coachmarkAlignment: CoachmarkAlignment
+    val coachmarkPosition: Offset = Offset.Unspecified,
+    val coachmarkSize: IntSize = IntSize.Zero,
+    val description: String = "",
+    val cornerRadius: Dp = 0.dp,
+    val coachmarkAlignment: CoachmarkAlignment = CoachmarkAlignment.BOTTOM
 )
 
 enum class CoachmarkAlignment {
